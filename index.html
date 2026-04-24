@@ -62,6 +62,15 @@
   .result-overlay.paid { background: #00c853; }
   .result-overlay.not-paid { background: #d50000; }
   .result-overlay.unknown { background: #ff6f00; }
+  .result-overlay.tier-gold {
+    background: linear-gradient(135deg, #1a1a1a 0%, #3a3020 100%) !important;
+    border: 6px solid #f0c800 !important;
+  }
+  .result-overlay.tier-gold .result-icon,
+  .result-overlay.tier-gold .result-status {
+    color: #f0c800 !important;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.7);
+  }
   .result-icon { font-size: 90px; margin-bottom: 16px; }
   .result-status { font-size: 48px; font-weight: 900; letter-spacing: 2px; margin-bottom: 14px; }
   .result-member { font-size: 26px; font-weight: 600; margin-bottom: 8px; }
@@ -220,21 +229,26 @@ function onScanSuccess(decodedText) {
   if (document.getElementById('resultOverlay').classList.contains('show')) return;
   if (scanner && scannerRunning) scanner.pause(true);
 
-  let memberNo = decodedText.trim();
+  // Chunk 4: 'G:' prefix means Gold member
+  let raw = decodedText.trim();
+  let tier = 'Normal';
+  if (raw.indexOf('G:') === 0) { tier = 'Gold'; raw = raw.slice(2); }
+  let memberNo = raw;
   if (memberNo.endsWith('.0')) memberNo = memberNo.slice(0, -2);
-  showResult(memberNo);
+  showResult(memberNo, tier);
 }
 
 // ── Show Result ───────────────────────────────────────────
-function showResult(memberNo) {
+function showResult(memberNo, tier) {
   const member = members[memberNo];
   const overlay = document.getElementById('resultOverlay');
   overlay.className = 'result-overlay show';
+  if (tier === 'Gold') overlay.classList.add('tier-gold');
 
   if (member && member.paid) {
     overlay.classList.add('paid');
     document.getElementById('resultIcon').textContent = '\u2713';
-    document.getElementById('resultStatus').textContent = 'PAID';
+    document.getElementById('resultStatus').textContent = (tier === 'Gold') ? 'PAID — GOLD MEMBER' : 'PAID';
     document.getElementById('resultMember').textContent = 'Member No: ' + memberNo;
     document.getElementById('resultName').textContent = member.name || '';
     document.getElementById('resultDetail').textContent = member.status;
